@@ -7,8 +7,9 @@ from time import sleep
 from src.config import get_config
 from src.connect import Jellyfin, TubeArchivist, clean_overview
 from src.episode import Episode
-from src.static_types import JFEpisode, JFShow, TAChannel, TAVideo
+from src.static_types import JFEpisode, JFShow, TAChannel, TAVideo, ConfigType
 
+CONFIG: ConfigType = get_config()
 
 class Library:
     """grouped series"""
@@ -20,7 +21,8 @@ class Library:
 
     def get_yt_collection(self) -> str:
         """get collection id for youtube folder"""
-        path: str = "Items?Recursive=true&includeItemTypes=Folder"
+        token = CONFIG["jf_token"]
+        path: str = f"Items?Recursive=true&includeItemTypes=Folder&api_key={token}"
         folders: dict = Jellyfin().get(path)
         for folder in folders["Items"]:
             if folder.get("Name").lower() == "youtube":
@@ -44,13 +46,15 @@ class Library:
 
     def _get_all_series(self) -> dict:
         """get all shows indexed in jf"""
-        path: str = f"Items?Recursive=true&IncludeItemTypes=Series&fields=ParentId,Path&ParentId={self.yt_collection}"  # noqa: E501
+        token = CONFIG["jf_token"]
+        path: str = f"Items?Recursive=true&IncludeItemTypes=Series&fields=ParentId,Path&ParentId={self.yt_collection}&api_key={token}"  # noqa: E501
         all_shows: dict = Jellyfin().get(path)
 
         return all_shows
 
     def _get_collection(self) -> str:
         """get youtube collection id"""
+        token = CONFIG["jf_token"]
         folders: dict = Jellyfin().get("Library/MediaFolders")
         for folder in folders["Items"]:
             if folder.get("Name").lower() == "youtube":
@@ -84,8 +88,9 @@ class Show:
         limit: int | bool = False,
     ) -> list[JFEpisode]:
         """get all episodes of show"""
+        token = CONFIG["jf_token"]
         series_id: str = self.show["Id"]
-        path: str = f"Shows/{series_id}/Episodes?fields=Path,Studios"
+        path: str = f"Shows/{series_id}/Episodes?fields=Path,Studios&api_key={token}"
         if limit:
             path = f"{path}&limit={limit}"
 
@@ -108,8 +113,9 @@ class Show:
 
     def _get_existing_seasons(self) -> list[str]:
         """get all seasons indexed of series"""
+        token = CONFIG["jf_token"]
         series_id: str = self.show["Id"]
-        path: str = f"Shows/{series_id}/Seasons"
+        path: str = f"Shows/{series_id}/Seasons?api_key={token}"
         all_seasons: dict = Jellyfin().get(path)
 
         return [str(i.get("IndexNumber")) for i in all_seasons["Items"]]

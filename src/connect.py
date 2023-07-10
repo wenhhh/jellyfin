@@ -15,9 +15,9 @@ class Jellyfin:
     """connect to jellyfin"""
 
     headers: dict = {
-        "Authorization": "MediaBrowser Token=" + CONFIG["jf_token"]
+        # "Authorization": "MediaBrowser Token=" + CONFIG["jf_token"]
     }
-    base: str = CONFIG["jf_url"]
+    base: str = CONFIG["jf_url"] + '/emby'
 
     def get(self, path: str) -> dict:
         """make a get request"""
@@ -51,7 +51,7 @@ class Jellyfin:
 
     def ping(self) -> None:
         """ping the server"""
-        response = self.get("Users")
+        response = self.get("Users/Public")
         if not response:
             raise ConnectionError("failed to connect to jellyfin")
 
