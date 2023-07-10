@@ -5,7 +5,6 @@ from datetime import datetime
 from src.connect import Jellyfin, TubeArchivist, clean_overview
 from src.static_types import TAVideo
 
-
 class Episode:
     """interact with an single episode"""
 

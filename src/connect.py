@@ -21,7 +21,9 @@ class Jellyfin:
 
     def get(self, path: str) -> dict:
         """make a get request"""
+        token = CONFIG["jf_token"]
         url: str = f"{self.base}/{path}"
+        url = add_query_param(url, "api_key", token)
         response = requests.get(url, headers=self.headers, timeout=10)
         if response.ok:
             return response.json()
@@ -31,16 +33,21 @@ class Jellyfin:
 
     def post(self, path: str, data: dict | bool) -> None:
         """make a post request"""
+        token = CONFIG["jf_token"]
         url: str = f"{self.base}/{path}"
+        url = add_query_param(url, "api_key", token)
+        body = data if isinstance(data, dict) else {}
         response = requests.post(
-            url, headers=self.headers, json=data, timeout=10
+            url, headers=self.headers, json=body, timeout=10
         )
         if not response.ok:
             print(response.text)
 
     def post_img(self, path: str, thumb_base64: bytes) -> None:
         """set image"""
+        token = CONFIG["jf_token"]
         url: str = f"{self.base}/{path}"
+        url = add_query_param(url, "api_key", token)
         new_headers: dict = self.headers.copy()
         new_headers.update({"Content-Type": "image/jpeg"})
         response = requests.post(
@@ -51,7 +58,8 @@ class Jellyfin:
 
     def ping(self) -> None:
         """ping the server"""
-        response = self.get("Users/Public")
+        token = CONFIG["jf_token"]
+        response = self.get(f"Users/Public?api_key={token}")
         if not response:
             raise ConnectionError("failed to connect to jellyfin")
 
@@ -115,3 +123,13 @@ def clean_overview(overview_raw: str) -> str:
     desc_clean: str = overview_raw.replace("\n", "<br>")
 
     return desc_clean
+
+def add_query_param(url: str, key: str, value: str) -> str:
+    if '?' in url:
+        # If the URL already has other parameters, then add an '&' and the new parameter
+        separator = '&'
+    else:
+        # If the URL doesn't have any other parameters, then add a '?' and the new parameter
+        separator = '?'
+    
+    return f"{url}{separator}{key}={value}"
